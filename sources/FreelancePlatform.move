@@ -551,7 +551,7 @@ module freelance_platform::FreelancePlatform {
 
     // ============ Admin ============
 
-    /// Platform admin (deployer) can pause new jobs, bids, accepts, and fund_escrow. Release/dispute/refund still work.
+    /// Pause new jobs/bids/accept/fund; release/dispute/refund still work. Deployer only.
     public entry fun set_paused(admin: &signer, paused: bool) acquires PlatformState {
         assert!(signer::address_of(admin) == @freelance_platform, ENOT_PLATFORM_ADMIN);
         let state = borrow_global_mut<PlatformState>(@freelance_platform);
@@ -559,7 +559,7 @@ module freelance_platform::FreelancePlatform {
         event::emit(PauseEvent { paused });
     }
 
-    /// Withdraw accumulated platform fees (APT) to a recipient. Only deployer.
+    /// Withdraw platform fees to address. Deployer only.
     public entry fun withdraw_platform_fees(admin: &signer, to: address, amount: u64) {
         assert!(signer::address_of(admin) == @freelance_platform, ENOT_PLATFORM_ADMIN);
         assert!(amount > 0, EZERO_BUDGET);
