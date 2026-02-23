@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Typewriter from "typewriter-effect";
 import { motion } from "framer-motion";
 import { Navbar } from "./components/Navbar";
@@ -49,9 +49,20 @@ function App() {
 
   const timeline = { start: startTimeline, update: updateTimeline };
 
+  const handleCopyAddress = useCallback(() => {
+    addLog({ text: "> address copied to clipboard", type: "success" });
+  }, [addLog]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      addLog({ text: "> syncing chain state...", type: "default" });
+    }, 30000);
+    return () => clearInterval(id);
+  }, [addLog]);
+
   return (
     <div className="app">
-      <Navbar />
+      <Navbar onCopyAddress={handleCopyAddress} />
 
       <main style={{ padding: 24, maxWidth: 1000, margin: "0 auto" }}>
         {/* Hero */}

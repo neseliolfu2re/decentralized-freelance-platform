@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getJobCounter, getEscrowAmount, octasToApt } from "../aptos";
+import { getJobCounter, getEscrowAmount, octasToApt, aptos } from "../aptos";
 
 interface EscrowHealthPanelProps {
   refreshTrigger: number;
@@ -9,6 +9,7 @@ interface EscrowHealthPanelProps {
 export function EscrowHealthPanel({ refreshTrigger }: EscrowHealthPanelProps) {
   const [activeJobs, setActiveJobs] = useState(0);
   const [totalLocked, setTotalLocked] = useState(0);
+  const [lastBlock, setLastBlock] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,10 +17,18 @@ export function EscrowHealthPanel({ refreshTrigger }: EscrowHealthPanelProps) {
     async function load() {
       setLoading(true);
       try {
-        const count = await getJobCounter();
+        const [count, ledgerInfo] = await Promise.all([
+          getJobCounter(),
+          aptos.getLedgerInfo().catch(() => null),
+        ]);
+        if (!cancelled && ledgerInfo?.block_height != null) {
+          setLastBlock(String(ledgerInfo.block_height));
+        }
         if (count === 0) {
-          setActiveJobs(0);
-          setTotalLocked(0);
+          if (!cancelled) {
+            setActiveJobs(0);
+            setTotalLocked(0);
+          }
           return;
         }
         let total = 0;
@@ -56,13 +65,16 @@ export function EscrowHealthPanel({ refreshTrigger }: EscrowHealthPanelProps) {
     >
       <div className="card-title">system_status</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11 }}>
-        <div style={{ color: "var(--green)" }}>STATUS: ONLINE</div>
+        <div style={{ color: "var(--green)" }}>SYSTEM: ONLINE</div>
         <div style={{ color: "var(--muted)" }}>NETWORK: TESTNET</div>
         <div style={{ color: "var(--muted)" }}>
           ACTIVE JOBS: {loading ? "—" : activeJobs}
         </div>
         <div style={{ color: "var(--muted)" }}>
           TOTAL LOCKED: {loading ? "—" : `${octasToApt(totalLocked)} APT`}
+        </div>
+        <div style={{ color: "var(--muted)" }}>
+          LAST BLOCK: {lastBlock ?? "—"}
         </div>
       </div>
     </motion.div>

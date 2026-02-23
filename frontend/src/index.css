@@ -173,7 +173,7 @@ input:focus, textarea:focus {
 .badge-cancelled { color: var(--muted); border: 1px solid var(--muted); }
 .badge-paid { color: var(--green); }
 
-/* Status badge micro animation (glow + pulse on change) */
+/* Status badge micro animation (glow + border pulse on change) */
 .badge-updated {
   animation: badge-glow 0.3s ease-out;
 }
@@ -181,7 +181,11 @@ input:focus, textarea:focus {
 @keyframes badge-glow {
   0% {
     box-shadow: 0 0 12px currentColor;
+    border-color: currentColor;
     opacity: 0.85;
+  }
+  50% {
+    box-shadow: 0 0 8px currentColor;
   }
   100% {
     box-shadow: none;

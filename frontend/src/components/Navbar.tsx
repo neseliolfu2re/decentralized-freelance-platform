@@ -2,7 +2,11 @@ import { useState, useCallback } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function Navbar() {
+interface NavbarProps {
+  onCopyAddress?: () => void;
+}
+
+export function Navbar({ onCopyAddress }: NavbarProps) {
   const { connect, disconnect, account, wallets } = useWallet();
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -20,8 +24,9 @@ export function Navbar() {
     if (!addr) return;
     navigator.clipboard.writeText(addr);
     setCopied(true);
+    onCopyAddress?.();
     setTimeout(() => setCopied(false), 2000);
-  }, [addr]);
+  }, [addr, onCopyAddress]);
 
   return (
     <motion.header
