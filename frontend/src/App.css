@@ -1,0 +1,10 @@
+.app {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+@media (max-width: 900px) {
+  main [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}

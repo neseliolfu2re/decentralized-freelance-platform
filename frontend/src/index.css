@@ -1,0 +1,162 @@
+/* Minimal Hacker UI */
+:root {
+  --bg: #0a0a0a;
+  --green: #00ff88;
+  --green-dim: #00cc6a;
+  --text: #e0e0e0;
+  --muted: #888;
+  --error: #ff4d4d;
+  --border: #333;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Courier New", "SF Mono", Monaco, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--green);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Blinking cursor */
+.cursor-blink::after {
+  content: "▌";
+  color: var(--green);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Terminal log panel */
+.terminal-log {
+  background: #080808;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.terminal-log .log-line {
+  color: var(--muted);
+  margin: 2px 0;
+  word-break: break-all;
+}
+
+.terminal-log .log-line.success {
+  color: var(--green);
+}
+
+.terminal-log .log-line.error {
+  color: var(--error);
+}
+
+.terminal-log .log-line.tx {
+  color: var(--green-dim);
+}
+
+/* Buttons */
+.btn {
+  font-family: inherit;
+  font-size: 13px;
+  background: transparent;
+  color: var(--green);
+  border: 1px solid var(--green);
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--error);
+  color: var(--bg);
+}
+
+/* Inputs */
+input, textarea {
+  font-family: inherit;
+  font-size: 13px;
+  background: #111;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 2px;
+  width: 100%;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--muted);
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+/* Cards */
+.card {
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  color: var(--green);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.badge-open { color: var(--green); border: 1px solid var(--green); }
+.badge-progress { color: #ffaa00; border: 1px solid #ffaa00; }
+.badge-completed { color: var(--green); border: 1px solid var(--green); }
+.badge-cancelled { color: var(--muted); border: 1px solid var(--muted); }
+.badge-paid { color: var(--green); }
