@@ -1,6 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 
-export type LogType = "default" | "success" | "error" | "tx";
+export type LogType =
+  | "default"
+  | "success"
+  | "error"
+  | "tx"
+  | "error_wallet"
+  | "error_vm"
+  | "error_network";
 
 export interface LogLine {
   id: number;

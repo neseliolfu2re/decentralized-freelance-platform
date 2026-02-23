@@ -89,7 +89,14 @@ export function JobList({
         animate={{ opacity: 1 }}
       >
         <div className="card-title">2. job_list</div>
-        <div style={{ color: "var(--muted)" }}>loading...</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ color: "var(--muted)", fontSize: 12 }}>
+            &gt; loading jobs...
+          </div>
+          <div style={{ color: "var(--muted)", fontSize: 12 }}>
+            &gt; syncing on-chain state...
+          </div>
+        </div>
       </motion.div>
     );
   }
@@ -103,7 +110,18 @@ export function JobList({
     >
       <div className="card-title">2. job_list</div>
       {jobs.length === 0 ? (
-        <div style={{ color: "var(--muted)" }}>No jobs yet.</div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            color: "var(--muted)",
+            fontSize: 12,
+          }}
+        >
+          <div>&gt; No active jobs.</div>
+          <div>&gt; Create your first milestone-based escrow.</div>
+        </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {jobs.map((j) => (
@@ -115,22 +133,46 @@ export function JobList({
                 borderRadius: 4,
                 cursor: "pointer",
                 background:
-                  selectedJobId === j.jobId ? "rgba(0,255,136,0.08)" : "transparent",
+                  selectedJobId === j.jobId
+                    ? "rgba(0,255,136,0.08)"
+                    : "transparent",
               }}
               onClick={() => onSelectJob(j.jobId)}
               whileHover={{ borderColor: "var(--green)" }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 8,
+                }}
+              >
                 <span style={{ color: "var(--green)" }}>Job #{j.jobId}</span>
-                <span className={`badge badge-${j.status === JOB_STATUS.OPEN ? "open" : j.status === JOB_STATUS.IN_PROGRESS ? "progress" : j.status === JOB_STATUS.COMPLETED ? "completed" : "cancelled"}`}>
+                <motion.span
+                  key={`${j.jobId}-${j.status}`}
+                  className={`badge badge-${
+                    j.status === JOB_STATUS.OPEN
+                      ? "open"
+                      : j.status === JOB_STATUS.IN_PROGRESS
+                        ? "progress"
+                        : j.status === JOB_STATUS.COMPLETED
+                          ? "completed"
+                          : "cancelled"
+                  } badge-updated`}
+                  initial={{ opacity: 0.7 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
                   {jobStatusLabel(j.status)}
-                </span>
+                </motion.span>
               </div>
               <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 4 }}>
                 client: {j.client.slice(0, 8)}...{j.client.slice(-4)}
               </div>
               <div style={{ color: "var(--muted)", fontSize: 12 }}>
-                budget: {octasToApt(j.budget)} APT · escrow: {octasToApt(j.escrowAmount)} APT
+                budget: {octasToApt(j.budget)} APT · escrow:{" "}
+                {octasToApt(j.escrowAmount)} APT
               </div>
               <div style={{ color: "var(--muted)", fontSize: 12 }}>
                 Milestones: {j.releasedMilestones}/{j.milestoneCount} released

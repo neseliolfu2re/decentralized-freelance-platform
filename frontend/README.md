@@ -1,3 +1,11 @@
+# Freelance Platform (Aptos Testnet)
+
+Minimal Hacker UI frontend for the on-chain freelance escrow. Connect with **Petra** on Aptos Testnet.
+
+> **Petra / Aptos Connect:** `aptosconnect.app` has moved to **https://web.petra.app**. Use the new domain for bookmarks and web wallet; the extension and adapter use it automatically when up to date.
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

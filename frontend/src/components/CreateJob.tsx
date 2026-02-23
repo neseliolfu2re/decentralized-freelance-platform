@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MODULE_ADDRESS, MODULE_NAME, OCTAS_PER_APT } from "../aptos";
+import { MODULE_ADDRESS, MODULE_NAME, OCTAS_PER_APT, aptos } from "../aptos";
+import { formatTxError, getErrorCategory } from "../utils/log";
 import type { LogLine } from "./TerminalLog";
+import type { TimelineSteps } from "./TransactionTimeline";
 
 interface CreateJobProps {
   onSuccess: () => void;
   addLog: (line: Omit<LogLine, "id">) => void;
+  timeline?: { start: () => void; update: (p: Partial<TimelineSteps>) => void };
 }
 
-export function CreateJob({ onSuccess, addLog }: CreateJobProps) {
+export function CreateJob({ onSuccess, addLog, timeline }: CreateJobProps) {
   const { account, signAndSubmitTransaction } = useWallet();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -26,6 +29,7 @@ export function CreateJob({ onSuccess, addLog }: CreateJobProps) {
   const handleSubmit = async () => {
     if (!account || amounts.length === 0) return;
     setLoading(true);
+    timeline?.start();
     addLog({ text: "> create_job executing...", type: "default" });
     try {
       const res = await signAndSubmitTransaction({
@@ -35,7 +39,12 @@ export function CreateJob({ onSuccess, addLog }: CreateJobProps) {
           functionArguments: [title, description, amounts, 0],
         },
       });
-      addLog({ text: `> create_job executed`, type: "success" });
+      timeline?.update({ submitted: true });
+      addLog({ text: "> submitted", type: "default" });
+      await aptos.waitForTransaction({ transactionHash: res.hash });
+      timeline?.update({ confirmed: true });
+      addLog({ text: "> confirmed", type: "success" });
+      timeline?.update({ completed: true });
       addLog({
         text: `> tx: https://explorer.aptoslabs.com/txn/${res.hash}?network=testnet`,
         type: "tx",
@@ -45,8 +54,10 @@ export function CreateJob({ onSuccess, addLog }: CreateJobProps) {
       setMilestonesInput("10000000, 10000000");
       onSuccess();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      addLog({ text: `> error: ${msg}`, type: "error" });
+      addLog({
+        text: formatTxError(e),
+        type: getErrorCategory(e),
+      });
     } finally {
       setLoading(false);
     }

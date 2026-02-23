@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MODULE_ADDRESS, MODULE_NAME } from "../aptos";
+import { MODULE_ADDRESS, MODULE_NAME, aptos } from "../aptos";
+import { formatTxError, getErrorCategory } from "../utils/log";
 import type { LogLine } from "./TerminalLog";
+import type { TimelineSteps } from "./TransactionTimeline";
 
 interface PlaceBidProps {
   jobId: number | null;
   onSuccess: () => void;
   addLog: (line: Omit<LogLine, "id">) => void;
+  timeline?: { start: () => void; update: (p: Partial<TimelineSteps>) => void };
 }
 
-export function PlaceBid({ jobId, onSuccess, addLog }: PlaceBidProps) {
+export function PlaceBid({ jobId, onSuccess, addLog, timeline }: PlaceBidProps) {
   const { account, signAndSubmitTransaction } = useWallet();
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
@@ -21,6 +24,7 @@ export function PlaceBid({ jobId, onSuccess, addLog }: PlaceBidProps) {
     const amt = parseInt(amount.trim(), 10);
     if (Number.isNaN(amt) || amt <= 0) return;
     setLoading(true);
+    timeline?.start();
     addLog({ text: "> place_bid executing...", type: "default" });
     try {
       const res = await signAndSubmitTransaction({
@@ -30,7 +34,12 @@ export function PlaceBid({ jobId, onSuccess, addLog }: PlaceBidProps) {
           functionArguments: [jobId, amt, message || "Bid"],
         },
       });
-      addLog({ text: "> place_bid executed", type: "success" });
+      timeline?.update({ submitted: true });
+      addLog({ text: "> submitted", type: "default" });
+      await aptos.waitForTransaction({ transactionHash: res.hash });
+      timeline?.update({ confirmed: true });
+      addLog({ text: "> confirmed", type: "success" });
+      timeline?.update({ completed: true });
       addLog({
         text: `> tx: https://explorer.aptoslabs.com/txn/${res.hash}?network=testnet`,
         type: "tx",
@@ -39,8 +48,10 @@ export function PlaceBid({ jobId, onSuccess, addLog }: PlaceBidProps) {
       setMessage("");
       onSuccess();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      addLog({ text: `> error: ${msg}`, type: "error" });
+      addLog({
+        text: formatTxError(e),
+        type: getErrorCategory(e),
+      });
     } finally {
       setLoading(false);
     }

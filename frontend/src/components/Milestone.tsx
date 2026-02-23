@@ -1,16 +1,27 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MODULE_ADDRESS, MODULE_NAME } from "../aptos";
+import {
+  MODULE_ADDRESS,
+  MODULE_NAME,
+  aptos,
+  getJobStatus,
+  getEscrowAmount,
+  jobStatusLabel,
+  octasToApt,
+} from "../aptos";
+import { formatTxError, getErrorCategory } from "../utils/log";
 import type { LogLine } from "./TerminalLog";
+import type { TimelineSteps } from "./TransactionTimeline";
 
 interface MilestoneProps {
   jobId: number | null;
   onSuccess: () => void;
   addLog: (line: Omit<LogLine, "id">) => void;
+  timeline?: { start: () => void; update: (p: Partial<TimelineSteps>) => void };
 }
 
-export function Milestone({ jobId, onSuccess, addLog }: MilestoneProps) {
+export function Milestone({ jobId, onSuccess, addLog, timeline }: MilestoneProps) {
   const { account, signAndSubmitTransaction } = useWallet();
   const [loading, setLoading] = useState<string | null>(null);
   const [bidId, setBidId] = useState("");
@@ -19,28 +30,59 @@ export function Milestone({ jobId, onSuccess, addLog }: MilestoneProps) {
   const runTx = async (
     label: string,
     fn: string,
-    args: unknown[]
+    args: (string | number)[],
+    milestoneIndex: number | null = null
   ) => {
     if (!account || !jobId) return;
     setLoading(label);
+    timeline?.start();
     addLog({ text: `> ${fn} executing...`, type: "default" });
     try {
       const res = await signAndSubmitTransaction({
         sender: account.address,
         data: {
           function: `${MODULE_ADDRESS}::${MODULE_NAME}::${fn}`,
-          functionArguments: args as (string | number)[],
+          functionArguments: args,
         },
       });
-      addLog({ text: `> ${fn} executed`, type: "success" });
+      timeline?.update({ submitted: true });
+      addLog({ text: "> submitted", type: "default" });
+      await aptos.waitForTransaction({ transactionHash: res.hash });
+      timeline?.update({ confirmed: true });
+      addLog({ text: "> confirmed", type: "success" });
+      if (fn === "release_milestone" && milestoneIndex !== null) {
+        timeline?.update({ escrowUpdated: true });
+        addLog({
+          text: `> milestone[${milestoneIndex}] released`,
+          type: "success",
+        });
+        addLog({ text: "> escrow balance updated", type: "default" });
+        try {
+          const status = await getJobStatus(jobId);
+          const escrow = await getEscrowAmount(jobId);
+          addLog({
+            text: `> job status: ${jobStatusLabel(status)}`,
+            type: "default",
+          });
+          addLog({
+            text: `> escrow: ${octasToApt(escrow)} APT`,
+            type: "default",
+          });
+        } catch {
+          // ignore view errors
+        }
+      }
+      timeline?.update({ completed: true });
       addLog({
         text: `> tx: https://explorer.aptoslabs.com/txn/${res.hash}?network=testnet`,
         type: "tx",
       });
       onSuccess();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      addLog({ text: `> error: ${msg}`, type: "error" });
+      addLog({
+        text: formatTxError(e),
+        type: getErrorCategory(e),
+      });
     } finally {
       setLoading(null);
     }
@@ -68,7 +110,10 @@ export function Milestone({ jobId, onSuccess, addLog }: MilestoneProps) {
         />
         <button
           className="btn"
-          onClick={() => runTx("accept_bid", "accept_bid", [jobId, bidIdNum])}
+          onClick={() =>
+            jobId != null &&
+            runTx("accept_bid", "accept_bid", [jobId as number, bidIdNum])
+          }
           disabled={!account || !jobId || !!loading || Number.isNaN(bidIdNum) || bidIdNum < 1}
         >
           {loading === "accept_bid" ? "..." : "accept_bid"}
@@ -80,7 +125,10 @@ export function Milestone({ jobId, onSuccess, addLog }: MilestoneProps) {
         />
         <button
           className="btn"
-          onClick={() => runTx("fund_escrow", "fund_escrow", [jobId, fundAmountNum])}
+          onClick={() =>
+            jobId != null &&
+            runTx("fund_escrow", "fund_escrow", [jobId as number, fundAmountNum])
+          }
           disabled={!account || !jobId || !!loading || Number.isNaN(fundAmountNum) || fundAmountNum <= 0}
         >
           {loading === "fund_escrow" ? "..." : "fund_escrow"}
@@ -89,7 +137,8 @@ export function Milestone({ jobId, onSuccess, addLog }: MilestoneProps) {
           <button
             className="btn"
             onClick={() =>
-              runTx("release_milestone_0", "release_milestone", [jobId, 0])
+              jobId != null &&
+              runTx("release_milestone_0", "release_milestone", [jobId as number, 0], 0)
             }
             disabled={!account || !jobId || !!loading}
           >
@@ -98,7 +147,8 @@ export function Milestone({ jobId, onSuccess, addLog }: MilestoneProps) {
           <button
             className="btn"
             onClick={() =>
-              runTx("release_milestone_1", "release_milestone", [jobId, 1])
+              jobId != null &&
+              runTx("release_milestone_1", "release_milestone", [jobId as number, 1], 1)
             }
             disabled={!account || !jobId || !!loading}
           >

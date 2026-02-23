@@ -71,6 +71,18 @@ a:hover {
   color: var(--error);
 }
 
+.terminal-log .log-line.error_wallet {
+  color: #ff4d4d;
+}
+
+.terminal-log .log-line.error_vm {
+  color: #ff9500;
+}
+
+.terminal-log .log-line.error_network {
+  color: #ffaa00;
+}
+
 .terminal-log .log-line.tx {
   color: var(--green-dim);
 }
@@ -160,3 +172,38 @@ input:focus, textarea:focus {
 .badge-completed { color: var(--green); border: 1px solid var(--green); }
 .badge-cancelled { color: var(--muted); border: 1px solid var(--muted); }
 .badge-paid { color: var(--green); }
+
+/* Status badge micro animation (glow + pulse on change) */
+.badge-updated {
+  animation: badge-glow 0.3s ease-out;
+}
+
+@keyframes badge-glow {
+  0% {
+    box-shadow: 0 0 12px currentColor;
+    opacity: 0.85;
+  }
+  100% {
+    box-shadow: none;
+    opacity: 1;
+  }
+}
+
+/* Escrow health panel */
+.escrow-health-panel {
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+/* Corner blinking cursor */
+.corner-cursor {
+  position: fixed;
+  bottom: 16px;
+  right: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  pointer-events: none;
+}
